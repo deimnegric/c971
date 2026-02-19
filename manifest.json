@@ -1,7 +1,7 @@
 {
   "name": "Envanter Takip",
   "short_name": "Envanter",
-  "start_url": "./c971/index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#111827",
   "theme_color": "#111827",
