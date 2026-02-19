@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Envanter Takip</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background:#f4f6f8;
+  padding:20px;
+  color:#1e293b;
+}
+
+.container{max-width:1300px;margin:auto;}
+
+h1{text-align:center;margin-bottom:25px;color:#111827;font-weight:600;}
+
+.table-wrapper{
+  background:white;
+  border-radius:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.15);
+  overflow-x:auto;
+}
+
+table{width:100%;border-collapse:collapse;min-width:1200px;}
+
+th{
+  background:#111827;
+  color:white;
+  font-size:13px;
+  padding:12px;
+}
+
+th,td{
+  padding:12px 10px;
+  text-align:center;
+  border-bottom:1px solid #e5e7eb;
+}
+
+td input{
+  width:100%;
+  border:1px solid transparent;
+  padding:6px;
+  border-radius:8px;
+  text-align:center;
+}
+
+td input:focus{
+  outline:none;
+  border:1px solid #6366f1;
+  background:#eef2ff;
+}
+
+.fark{font-weight:600;color:white;border-radius:8px;}
+.bg-negative{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+.bg-positive{background:linear-gradient(135deg,#22c55e,#15803d);}
+.bg-zero{background:#6b7280;}
+
+.delete-btn{cursor:pointer;font-size:18px;color:#ef4444;}
+
+button{
+  margin-top:20px;
+  padding:12px 25px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#6366f1,#4f46e5);
+  color:white;
+  cursor:pointer;
+}
+
+.summary{
+  margin-top:30px;
+  background:white;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 15px 30px rgba(0,0,0,0.15);
+}
+
+.summary-item{
+  display:flex;
+  justify-content:space-between;
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:8px;
+  color:white;
+  font-weight:500;
+}
+
+.net-card{
+  margin-top:15px;
+  padding:18px;
+  border-radius:16px;
+  font-size:18px;
+  font-weight:600;
+  text-align:center;
+  color:white;
+}
+
+.net-positive{background:linear-gradient(135deg,#22c55e,#15803d);}
+.net-negative{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+.net-zero{background:#6b7280;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>Envanter Takip</h1>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Kod</th>
+<th>İsim</th>
+<th>Envanter</th>
+<th>Gelen</th>
+<th>Transfer</th>
+<th>İade</th>
+<th>Satış</th>
+<th>Olması Gereken</th>
+<th>Olan</th>
+<th>Fark</th>
+<th>Birim Fiyat</th>
+<th>Fark Tutarı</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<button onclick="addRow()">+ Yeni Ürün</button>
+
+<div class="summary">
+<h3>Fark Özeti</h3>
+<div id="summaryList"></div>
+
+<hr style="margin:20px 0">
+
+<div id="toplamPozitif"></div>
+<div id="toplamNegatif"></div>
+<div id="netToplam" class="net-card net-zero">NET FARK: 0 ₺</div>
+</div>
+
+</div>
+
+<script>
+
+/* === SENİN MEVCUT JS KODUN BURADA (DEĞİŞMEDİ) === */
+
+function saveData(){
+  const rows=[];
+  document.querySelectorAll("#tableBody tr").forEach(row=>{
+    rows.push({
+      kod: row.querySelector(".kod").value,
+      isim: row.querySelector(".isim").value,
+      envanter: row.querySelector(".envanter").value,
+      gelen: row.querySelector(".gelen").value,
+      transfer: row.querySelector(".transfer").value,
+      iade: row.querySelector(".iade").value,
+      satis: row.querySelector(".satis").value,
+      olan: row.querySelector(".olan").value,
+      fiyat: row.querySelector(".fiyat").value
+    });
+  });
+  localStorage.setItem("envanterData",JSON.stringify(rows));
+}
+
+function loadData(){
+  const data=JSON.parse(localStorage.getItem("envanterData")) || [];
+  if(data.length===0){ addRow(); return; }
+  data.forEach(item=>addRow(item));
+  updateTotals();
+}
+
+function addRow(data={}){
+  const tbody=document.getElementById("tableBody");
+  const row=document.createElement("tr");
+
+  row.innerHTML=`
+  <td><input type="text" class="kod" value="${data.kod||""}"></td>
+  <td><input type="text" class="isim" value="${data.isim||""}"></td>
+  <td><input type="number" class="envanter" value="${data.envanter||0}"></td>
+  <td><input type="number" class="gelen" value="${data.gelen||0}"></td>
+  <td><input type="number" class="transfer" value="${data.transfer||0}"></td>
+  <td><input type="number" class="iade" value="${data.iade||0}"></td>
+  <td><input type="number" class="satis" value="${data.satis||0}"></td>
+  <td class="olmasi">0</td>
+  <td><input type="number" class="olan" value="${data.olan||0}"></td>
+  <td class="fark bg-zero">0</td>
+  <td><input type="number" class="fiyat" value="${data.fiyat||0}"></td>
+  <td class="fark-tutar">0 ₺</td>
+  <td class="delete-btn" onclick="deleteRow(this)">×</td>
+  `;
+
+  tbody.appendChild(row);
+
+  row.querySelectorAll("input").forEach(input=>{
+    input.addEventListener("input",()=>{
+      calculate(row);
+      updateSummary();
+      updateTotals();
+      saveData();
+    });
+  });
+
+  calculate(row);
+}
+
+function calculate(row){
+  const envanter=parseInt(row.querySelector(".envanter").value)||0;
+  const gelen=parseInt(row.querySelector(".gelen").value)||0;
+  const transfer=parseInt(row.querySelector(".transfer").value)||0;
+  const iade=parseInt(row.querySelector(".iade").value)||0;
+  const satis=parseInt(row.querySelector(".satis").value)||0;
+  const olan=parseInt(row.querySelector(".olan").value)||0;
+  const fiyat=parseFloat(row.querySelector(".fiyat").value)||0;
+
+  const olmasi=envanter+gelen+transfer+iade-satis;
+  row.querySelector(".olmasi").textContent=olmasi;
+
+  const fark=olan-olmasi;
+  const farkCell=row.querySelector(".fark");
+
+  farkCell.textContent=fark>0? "+"+fark : fark;
+  farkCell.className="fark "+(fark>0?"bg-positive":fark<0?"bg-negative":"bg-zero");
+
+  const tutar=fark*fiyat;
+  row.querySelector(".fark-tutar").textContent=tutar.toFixed(2)+" ₺";
+}
+
+function updateSummary(){
+  const summary=document.getElementById("summaryList");
+  summary.innerHTML="";
+  document.querySelectorAll("#tableBody tr").forEach(row=>{
+    const kod=row.querySelector(".kod").value.trim();
+    const isim=row.querySelector(".isim").value.trim();
+    const fark=parseInt(row.querySelector(".fark").textContent)||0;
+    if(kod && fark!==0){
+      const item=document.createElement("div");
+      item.className="summary-item";
+      item.style.background=fark<0?"#ef4444":"#22c55e";
+      item.innerHTML=`<span>${kod} - ${isim}</span><span>${fark>0? "+"+fark:fark}</span>`;
+      summary.appendChild(item);
+    }
+  });
+}
+
+function updateTotals(){
+  let pozitif=0,negatif=0;
+  document.querySelectorAll("#tableBody tr").forEach(row=>{
+    const tutar=parseFloat(row.querySelector(".fark-tutar").textContent)||0;
+    if(tutar>0) pozitif+=tutar;
+    if(tutar<0) negatif+=tutar;
+  });
+
+  document.getElementById("toplamPozitif").innerHTML=
+    "Toplam Fazla: <b style='color:#16a34a'>"+pozitif.toFixed(2)+" ₺</b>";
+
+  document.getElementById("toplamNegatif").innerHTML=
+    "Toplam Eksik: <b style='color:#dc2626'>"+negatif.toFixed(2)+" ₺</b>";
+
+  const net=pozitif+negatif;
+  const netDiv=document.getElementById("netToplam");
+
+  netDiv.className="net-card "+(net>0?"net-positive":net<0?"net-negative":"net-zero");
+  netDiv.textContent=net>0? "NET KAR: +"+net.toFixed(2)+" ₺"
+                          : net<0? "NET ZARAR: "+net.toFixed(2)+" ₺"
+                          : "NET FARK: 0 ₺";
+}
+
+function deleteRow(btn){
+  btn.closest("tr").remove();
+  updateSummary();
+  updateTotals();
+  saveData();
+}
+
+loadData();
+
+/* === SERVICE WORKER === */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+
+</script>
+</body>
+</html>
