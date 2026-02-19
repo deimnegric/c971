@@ -6,12 +6,7 @@
 <title>Envanter Takip</title>
 
 <!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
-</script>
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#111827">
 
 <style>
@@ -112,6 +107,9 @@ button{
 .net-positive{background:linear-gradient(135deg,#22c55e,#15803d);}
 .net-negative{background:linear-gradient(135deg,#ef4444,#b91c1c);}
 .net-zero{background:#6b7280;}
+
+/* Reset LocalStorage Button */
+#resetBtn{background:#dc2626;margin-top:20px;}
 </style>
 </head>
 
@@ -156,12 +154,13 @@ button{
 <div id="netToplam" class="net-card net-zero">NET FARK: 0 ₺</div>
 </div>
 
+<!-- Reset LocalStorage -->
+<div class="flex-center">
+  <button id="resetBtn" onclick="resetAll()">Tüm Verileri Sil (Şifreli)</button>
 </div>
 
 <script>
-
-/* === SENİN MEVCUT JS KODUN BURADA (DEĞİŞMEDİ) === */
-
+// === Verileri Yükle ve Kaydet ===
 function saveData(){
   const rows=[];
   document.querySelectorAll("#tableBody tr").forEach(row=>{
@@ -294,9 +293,19 @@ loadData();
 
 /* === SERVICE WORKER === */
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
+  navigator.serviceWorker.register("./service-worker.js");
 }
 
+/* === RESET LOCALSTORAGE === */
+function resetAll(){
+  const password=prompt("Tüm verileri silmek için şifreyi girin:");
+  if(password==="2407"){
+    localStorage.clear();
+    location.reload();
+  } else {
+    alert("Şifre yanlış!");
+  }
+}
 </script>
 </body>
 </html>
